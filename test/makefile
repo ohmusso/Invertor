@@ -31,7 +31,9 @@ $(OBJ): $(SRC)
 #デフォルトターゲット
 .PHONY : all
 all: TARGET $(OUT)
-	./sct.exe > out.txt
+	./sct.exe ztrans > testout_ztrans.txt
+	./sct.exe pwm > testout_pwm.txt
+	./sct.exe pwmsin > testout_pwmsin.txt
 
 #テスト対象のオブジェクトファイル作成
 TARGET:
@@ -41,6 +43,11 @@ TARGET:
 # $@ ターゲットファイル（ここでは target.exe)名
 $(OUT): $(OBJ)
 	$(CC) $(OBJ) $(TARGET_OBJS) -o $@
+
+#exeを削除
+.PHONY : del
+del:
+	$(RM) sct.exe
 
 #オブジェクトファイルをすべて削除
 .PHONY : clean

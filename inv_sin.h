@@ -35,13 +35,7 @@ typedef struct{
     short b1;						/* ztrans parameter. fixed-point number Q14. */
 } inv_sin_ztrans_t;
 
-#ifndef _PI
-#define _PI 3.14159265f
-#endif
-#define TRANS_Q14 ((1<<14) - 1)			/* 16383 = 0x3FFF */
-#define RESCALE_SHIFT_Q14 (14)			/* 16383 = 0x3FFF */
-#define MICROSEC (1E-6)
-
 extern void inv_sin_ztarans_init();
 extern void inv_sin_ztrans(inv_sin_ztrans_t* p);
-#endif
+
+#endif /* INVSIN_H */

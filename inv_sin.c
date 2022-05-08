@@ -1,10 +1,11 @@
 #include <math.h>
+#include "inv_common.h"
 #include "inv_sin.h"
 
 void inv_sin_ztarans_init(inv_sin_ztrans_t* p)
 {
 	if( p == (inv_sin_ztrans_t*)(0U) ){
-		/* nop */
+		/* null. nop */
 	}
 	else{
 		p->a1 = (short)((2*cos(2*_PI/p->cycle*p->dt))*TRANS_Q14);
