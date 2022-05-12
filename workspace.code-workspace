@@ -1,0 +1,19 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"terminal.integrated.cwd": ".",
+		"editor.codeLens": false,
+		"diffEditor.codeLens": false,
+		"editor.insertSpaces": false,
+		"editor.detectIndentation": false
+	},
+    "extensions": {
+        "recommendations": [
+
+		]
+    }
+}
