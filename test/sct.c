@@ -60,6 +60,9 @@ static void test_pwmsin(void)
 	inv_sin_ztarans_init(&work_ztrans);
 	inv_pwm_init(&work_pwm[0]);
 
+	printf("initialize done\n");
+	printf("sim cycle: %f[s]\n", SIM_CYCLE_TIME);
+	printf("sin: %f[Hz]\n", (1/work_ztrans.cycle));
 	printf("pwm sin results\n");
 	printf("time\tresult\n");
 	float time = 0.0;
