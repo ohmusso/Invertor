@@ -34,6 +34,9 @@ all: TARGET $(OUT)
 	./sct.exe ztrans > testout_ztrans.txt
 	./sct.exe pwm > testout_pwm.txt
 	./sct.exe pwmsin > testout_pwmsin.txt
+	./sct.exe rkflt > testout_rkflt.txt
+	./sct.exe transab > testout_transab.txt
+	./sct.exe transdq > testout_transdq.txt
 
 #テスト対象のオブジェクトファイル作成
 TARGET:

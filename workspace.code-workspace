@@ -9,7 +9,11 @@
 		"editor.codeLens": false,
 		"diffEditor.codeLens": false,
 		"editor.insertSpaces": false,
-		"editor.detectIndentation": false
+		"editor.detectIndentation": false,
+		"files.associations": {
+			"inv_lpf.h": "c",
+			"inv_sin.h": "c"
+		}
 	},
     "extensions": {
         "recommendations": [

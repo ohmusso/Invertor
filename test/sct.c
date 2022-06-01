@@ -6,6 +6,10 @@
 #include "../inv_common.h"
 #include "../inv_sin.h"
 #include "../inv_pwm.h"
+#include "../inv_lpf.h"
+#include "../inv_rungeKuttaFlt.h"
+#include "../inv_trans_ab.h"
+#include "../inv_trans_dq.h"
 
 //#define NO_ZTRANS
 
@@ -16,6 +20,7 @@
 #define PWM_DUTY_DEF (10*MICROSEC)
 #define SIN_CYCLE (4000*MICROSEC)
 #define ZTRANS_CYCLE (40*MICROSEC)
+#define FLT_CYCLE (40*MICROSEC)
 
 static inv_sin_ztrans_t work_ztrans = 
 {
@@ -35,9 +40,30 @@ static inv_pwm_config_t work_pwm[3] =
 	{ 2, PWM_CYCLE, PWM_DUTY_DEF}
 };
 
+static inv_lpf_config_t work_lpf[1] = 
+{
+	/* gain, buf */
+	{ 0.99, 0.0}
+};
+
+static inv_rkflt_config_t work_fkflt[1] =
+{
+	/* dt[μs], h[μs], buf */
+	{FLT_CYCLE, FLT_CYCLE, 0.0f}
+};
+
 static void test_ztrans(void);
 static void test_pwm(void);
 static void test_pwmsin(void);
+static void test_rkflt(void);
+static void test_transab(void);
+static void test_transdq(void);
+
+static float noise(
+	float time, 
+	float power, 
+	float f
+);
 
 int main(int argc, char** argv)
 {
@@ -50,10 +76,122 @@ int main(int argc, char** argv)
 	else if(strcmp(argv[1], "pwmsin") == 0){
 		test_pwmsin();
 	}
+	else if(strcmp(argv[1], "rkflt") == 0){
+		test_rkflt();
+	}
+	else if(strcmp(argv[1], "transab") == 0){
+		test_transab();
+	}
+	else if(strcmp(argv[1], "transdq") == 0){
+		test_transdq();
+	}
 	else{
 		printf("sct: invalid parameter");
 	}
 }
+
+static void test_transdq(void)
+{
+	inv_dq_t ret;
+	float a = 0.0;
+	float b = 0.0;
+	float rad = 0.0;
+	float th = _PI/4.0;
+	float time = 0.0;
+	float r = 1.0;
+	float f = (1.0/SIN_CYCLE);
+
+	printf("trans dq\n");
+	printf("dq coordinate rotational speed: 2pift\n");
+	printf("(a,b): rcos(2pift+th), rsin(2pift+th)\n");
+	printf("r: %f\n", r);
+	printf("f: %f\n", f);
+	printf("th: %f\n", th);
+	printf("a\tb\trad\tth\td\tq\n");
+
+	while(1){
+		rad = 2*_PI*f*time;
+		a =  r*cos(rad+th);
+		b =  r*sin(rad+th);
+		ret = inv_trans_dq(a, b, rad);
+		printf("%f\t%f\t%f\t%f\t%f\t%f\n", a, b, rad, th, ret.d, ret.q);
+
+		time += SIM_CYCLE_TIME;
+		if(time > (TEST_TIME/4.0)){
+			break;
+		}
+	}
+}
+
+static void test_transab(void)
+{
+	inv_ab_t ret;
+	float u = 0.0;
+	float v = 0.0;
+	float w = 0.0;
+
+	printf("trans ab\n");
+
+	printf("u\tv\tw\ta\tb\n");
+
+	ret = inv_trans_ab(u, v, w);
+	printf("%f\t%f\t%f\t%f\t%f\n", u, v, w, ret.a, ret.b);
+
+	u = 1.0; v = 1.0; w = 1.0;
+	ret = inv_trans_ab(u, v, w);
+	printf("%f\t%f\t%f\t%f\t%f\n", u, v, w, ret.a, ret.b);
+
+	u = 1.0; v = 2.0; w = 1.0;
+	ret = inv_trans_ab(u, v, w);
+	printf("%f\t%f\t%f\t%f\t%f\n", u, v, w, ret.a, ret.b);
+
+	u = 1.0; v = 1.0; w = 2.0;
+	ret = inv_trans_ab(u, v, w);
+	printf("%f\t%f\t%f\t%f\t%f\n", u, v, w, ret.a, ret.b);
+}
+
+static void test_rkflt(void)
+{
+	float time = 0.0;
+	float time_flt = 0.0;
+	float result = 0.0;
+	float f = (1.0/SIN_CYCLE);
+	float nf = (f*3.0);
+	float np = 0.1;
+
+	printf("runge kutta filter initialize\n");
+	printf("initialize done\n");
+
+	printf("init: %f\n", work_fkflt[0].buf);
+	printf("h: %f[us]\n", work_fkflt[0].h/MICROSEC);
+	printf("dt: %f[us]\n", work_fkflt[0].dt/MICROSEC);
+	printf("input sin: %f[Hz]\n", f);
+	printf("noise freq: %f[Hz]\n", nf);
+	printf("noise power: %f\n", np);
+	printf("runge kutta filter results\n");
+	printf("time\tresult\n");
+
+//	result = inv_rkflt_output(&work_fkflt[0], 1.0);
+//	printf("%f\t%f\n", time, result);
+
+	while(1){
+		result = sin(2*_PI*f*time);
+		result += noise(time, np, nf);
+
+		if(time_flt > FLT_CYCLE){
+			time_flt = 0.0f;
+			result = inv_rkflt_output(&work_fkflt[0], result);
+			printf("%f\t%f\n", time, result);
+		}
+
+		time_flt += SIM_CYCLE_TIME;
+		time += SIM_CYCLE_TIME;
+		if(time > TEST_TIME){
+			break;
+		}
+	}
+}
+
 static void test_pwmsin(void)
 {
 	printf("initialize\n");
@@ -79,6 +217,7 @@ static void test_pwmsin(void)
 
 		work_pwm[0].duty = (sin*PWM_CYCLE);
 		result = inv_pwm_main(0, SIM_CYCLE_TIME);
+		result = inv_lpf_output(&work_lpf[0], result);
 
 		printf("%f\t%f\n", time, result);
 
@@ -145,4 +284,12 @@ static void test_ztrans(void)
 	}
 	end = clock();
 	printf("calculation time(but include printf runnning time): %lf[s]", ((double)(end - begin) / CLOCKS_PER_SEC));
+}
+
+static float noise(
+	float time, 
+	float power, 
+	float f
+){
+	return (sin(2*_PI*f*time)*power);
 }
