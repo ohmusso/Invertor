@@ -37,6 +37,7 @@ all: TARGET $(OUT)
 	./sct.exe rkflt > testout_rkflt.txt
 	./sct.exe transab > testout_transab.txt
 	./sct.exe transdq > testout_transdq.txt
+	./sct.exe pid > testout_pid.txt
 
 #テスト対象のオブジェクトファイル作成
 TARGET:

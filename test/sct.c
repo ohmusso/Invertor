@@ -10,6 +10,7 @@
 #include "../inv_rungeKuttaFlt.h"
 #include "../inv_trans_ab.h"
 #include "../inv_trans_dq.h"
+#include "../inv_pid.h"
 
 //#define NO_ZTRANS
 
@@ -52,12 +53,19 @@ static inv_rkflt_config_t work_fkflt[1] =
 	{FLT_CYCLE, FLT_CYCLE, 0.0f}
 };
 
+static inv_pid_config_t work_pid[1] = 
+{
+	/* Propostional, Integral, Defferential, buf Integral, buf Defferential */
+	{ 0.8, 0.25, 0.5, 0.0, 0.0}
+};
+
 static void test_ztrans(void);
 static void test_pwm(void);
 static void test_pwmsin(void);
 static void test_rkflt(void);
 static void test_transab(void);
 static void test_transdq(void);
+static void test_pid(void);
 
 static float noise(
 	float time, 
@@ -85,8 +93,43 @@ int main(int argc, char** argv)
 	else if(strcmp(argv[1], "transdq") == 0){
 		test_transdq();
 	}
+	else if(strcmp(argv[1], "pid") == 0){
+		test_pid();
+	}
 	else{
 		printf("sct: invalid parameter");
+	}
+}
+
+static void test_pid(void)
+{
+	float out = 0.0;
+	float ref = 1.0;
+	float fb = 1.0;
+	float time = 0.0;
+	float error = 0.0;
+
+	printf("pid\n");
+	printf("cycle: %f\n", SIM_CYCLE_TIME);
+	printf("kp: %f\n", work_pid[0].kp);
+	printf("ki: %f\n", work_pid[0].ki);
+	printf("kd: %f\n", work_pid[0].kd);
+	printf("init: %f\n", work_pid[0].buf_d);
+	printf("system: lpf\n");
+	printf("start reference: %f\n", ref);
+	printf("feedback gain: %f\n", fb);
+	printf("time\tref\terror\toutput\n");
+
+	while(1){
+		error = ref - out;
+		out = inv_pid_output(&work_pid[0], error);
+		out = inv_lpf_output(&work_lpf[0], out);
+		printf("%f\t%f\t%f\t%f\n", time, ref, error, out);
+
+		time += SIM_CYCLE_TIME;
+		if(time > (TEST_TIME/4.0)){
+			break;
+		}
 	}
 }
 
